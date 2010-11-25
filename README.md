@@ -8,8 +8,8 @@
             ...                           
 	    )		
 3. Add this to your `urls.py`
-    # Django Tweet
-    (r'^twitter/', include('django_tweet.urls')),
+        # Django Tweet
+        (r'^twitter/', include('django_tweet.urls')),
 4. Edit `django_tweet/settings.py` to fit your prefs:
         AUTH_REDIRECT = '/'           # Location to Redirect to after successful auth
         APP_URL_PREFIX = 'twitter'    # URL Prefix set for django_tweet.urls
