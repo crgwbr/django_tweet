@@ -4,10 +4,10 @@
     
 	TARGET_HOST = 'localhost:8000'    # Replace localhost:8000 with your domain
     INSTALLED_APPS = (
-	    ...                           # Other Installed Apps before or after
-        'devproject.django_tweet',    # Replace devproject with your project name
-		...                           
-		)
+	...                           # Other Installed Apps before or after
+    'devproject.django_tweet',    # Replace devproject with your project name
+    ...                           
+	)
 		
 3. Add this to your `urls.py`
     # Django Tweet
