@@ -14,8 +14,6 @@ import oauth2 as oauth
 import oauthtwitter
 import twitter
 
-# Twitter Constants
-
 def authorize(request):
     if request.user.is_authenticated() and ((not request.user.is_staff and ALLOW_NON_STAFF) or (request.user.is_staff and ALLOW_STAFF)):
         twitter_auth = oauthtwitter.OAuthApi(CONSUMER_KEY, CONSUMER_SECRET)
@@ -32,11 +30,12 @@ def authorize(request):
             twitter_cred.access_token = access_token['oauth_token']
             twitter_cred.access_token_secret = access_token['oauth_token_secret']
             twitter_cred.save()
-            # Get User Data
+            # Verify User Auth
             api = twitter.Api(consumer_key=CONSUMER_KEY,
                               consumer_secret=CONSUMER_SECRET,
                               access_token_key=twitter_cred.access_token,
                               access_token_secret=twitter_cred.access_token_secret)
+            api.VerifyCredentials()
             return HttpResponseRedirect(AUTH_REDIRECT)
         else:
             # Get the temporary credentials for our next few calls
@@ -55,3 +54,61 @@ def authorize(request):
         return HttpResponse("Staff isn't allowed to do this.")
     else:
         return HttpResponse('Please Login first')
+
+def send_tweet(request):
+    if request.method == 'POST' and request.POST.has_key('update'):
+        if request.user.is_authenticated():
+            # Get Access Token
+            try:
+                access_token = request.user.twitter.access_token
+                token_secret = request.user.twitter.access_token_secret
+                if access_token == None or token_secret == None:
+                    raise Exception('Need to Auth')
+            except:
+                return HttpResponseRedirect('/%s/auth' % APP_URL_PREFIX)
+            # Send Tweet
+            api = twitter.Api(consumer_key=CONSUMER_KEY,
+                              consumer_secret=CONSUMER_SECRET,
+                              access_token_key=access_token,
+                              access_token_secret=token_secret)
+            status = api.PostUpdate(request.POST['update'])
+    if request.META.has_key('HTTP_REFERER'):
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        return HttpResponseRedirect("/")
+
+
+def tweet_form(request):
+    # Testing only!!!
+    if request.user.is_authenticated():
+        # Get Access Token
+        try:
+            access_token = request.user.twitter.access_token
+            token_secret = request.user.twitter.access_token_secret
+            if access_token == None or token_secret == None:
+                raise Exception('Need to Auth')
+        except:
+            return HttpResponseRedirect('/%s/auth' % APP_URL_PREFIX)
+        # Get user Data
+        api = twitter.Api(consumer_key=CONSUMER_KEY,
+                          consumer_secret=CONSUMER_SECRET,
+                          access_token_key=access_token,
+                          access_token_secret=token_secret)
+        user = api.VerifyCredentials()
+        # Assemble and return Form
+        temp = Template("""
+        <img src="{{profile_image_url}}" /><br/>
+        Logged in as {{name}}<br/>
+        You have {{friends_count}} friends, {{followers_count}} followers, and {{statuses_count}} status updates.<br/>
+        <form action="/twitter/post" method="post">{% csrf_token %}
+        <textarea name="update">Type your update here</textarea><br/>
+        <input type="submit" value="Post Tweet" />
+        </form>
+        """)
+        context = RequestContext(request, user.AsDict())
+        return HttpResponse(temp.render(context))
+    return HttpResponseRedirect('/')
+
+
+
+    
