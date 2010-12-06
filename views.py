@@ -109,40 +109,6 @@ def new_user(request):
         # Redirect User to Twitter
         return HttpResponseRedirect(twitter_auth.getAuthorizationURL(temp_credentials, url=AUTHENTICATE_URL))
 
-def login_with_twitter(request):
-    twitter_auth = oauthtwitter.OAuthApi(CONSUMER_KEY, CONSUMER_SECRET)
-    if request.GET.has_key('oauth_token') or request.GET.has_key('oauth_verifier'):
-        # Get temp_credentials from DB
-        temp_credentials = {'oauth_token' : request.session['request_token'],
-                            'oauth_token_secret' : request.session['request_token_secret']}
-        # Get Access Token
-        oauth_verifier = str(request.GET['oauth_verifier'])
-        token = twitter_auth.getAccessToken(temp_credentials, oauth_verifier)
-        access_token = token['oauth_token']
-        access_token_secret = token['oauth_token_secret']
-        # Verify User Auth
-        api = twitter.Api(consumer_key=CONSUMER_KEY,
-                          consumer_secret=CONSUMER_SECRET,
-                          access_token_key=access_token,
-                          access_token_secret=access_token_secret)
-        profile = api.VerifyCredentials()
-        # Login User
-        user = authenticate(username='%s@twitter' % profile.id, password=access_token_secret)
-        if user != None:
-            login(request, user)
-        else:
-            raise Exception("Auth Error: %s %s" % ('%s@twitter' % profile.id, access_token_secret))
-        # Redirect user
-        return HttpResponseRedirect(AUTH_REDIRECT)
-    else:
-        # Get the temporary credentials for our next few calls
-        temp_credentials = twitter_auth.getRequestToken(callback=LOGIN_URL)
-        # Save temp_credentials
-        request.session['request_token'] = temp_credentials['oauth_token']
-        request.session['request_token_secret'] = temp_credentials['oauth_token_secret']
-        request.session.modified = True
-        # Redirect User to Twitter
-        return HttpResponseRedirect(twitter_auth.getAuthorizationURL(temp_credentials, url=AUTHENTICATE_URL))
 
 def send_tweet(request):
     if request.method == 'POST' and request.POST.has_key('update'):
@@ -165,7 +131,6 @@ def send_tweet(request):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
         return HttpResponseRedirect("/")
-
 
 def tweet_form(request):
     # Testing only!!!

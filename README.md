@@ -21,7 +21,6 @@
 Right now there are 5 working functions.
 
 *  `/twitter/auth` Send Users here to OAuth with Twitter.  They must be logged in with Django's Auth system
-*  `/twitter/register` Send anonymous users to create a new account via their Twitter account.
-*  `/twitter/login` Send users here to login if they created their account via Twitter Login
+*  `/twitter/register` Send anonymous users to create a new account / login via their Twitter account.
 *  `/twitter/post` Direct POST forms here with update="....." to post updates to twitter. If the user hasn't auth'd yet, they get sent to `/twitter/auth`
 *  `/twitter/test` A very rough *testing only* update form. Shows some basic user info and enables posting updates
