@@ -12,4 +12,7 @@ SERVER = 'api.twitter.com'
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
 AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
+AUTHENTICATE_URL = 'https://api.twitter.com/oauth/authenticate'
 CALLBACK_URL = 'http://%s/%s/auth' % (settings.TARGET_HOST, APP_URL_PREFIX)
+REGISTER_URL = 'http://%s/%s/register' % (settings.TARGET_HOST, APP_URL_PREFIX)
+LOGIN_URL = 'http://%s/%s/login' % (settings.TARGET_HOST, APP_URL_PREFIX)
