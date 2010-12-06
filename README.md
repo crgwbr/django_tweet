@@ -18,7 +18,7 @@
 5. Run `./manage.py syncdb` to create django_tweet's tables
 	
 # Usage
-Right now there are 5 working functions.
+Right now these are the working functions.
 
 *  `/twitter/auth` Send Users here to OAuth with Twitter.  They must be logged in with Django's Auth system
 *  `/twitter/register` Send anonymous users to create a new account / login via their Twitter account.
