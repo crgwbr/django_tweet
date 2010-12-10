@@ -6,7 +6,10 @@
 	        ...                           # Other Installed Apps before or after
             'devproject.django_tweet',    # Replace devproject with your project name
             ...                           
-	    )		
+	    )
+        AUTHENTICATION_BACKENDS = (
+			'devproject.django_tweet.auth.TwitterBackend',
+		)		
 3. Add this to your `urls.py`
         # Django Tweet
         (r'^twitter/', include('django_tweet.urls')),

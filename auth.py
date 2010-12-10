@@ -35,7 +35,6 @@ class TwitterBackend:
 
     def get_user(self, user_id):
         try:
-            username = "%s@twitter" % user_id
-            return User.objects.get(username=username)
+            return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
