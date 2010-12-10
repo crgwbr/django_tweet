@@ -1,43 +1,41 @@
-# Twitter OAuth Client
+# Django Social Auth Backend
 
-#from django.conf import settings
-import oauth2 as oauth
-import oauthtwitter
-import pprint
-
-SERVER = 'api.twitter.com'
-REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
-ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
-AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
-
-CALLBACK_URL = 'http://%s/admin' % "localhost:8000"
-
-CONSUMER_KEY = 'Uu4u7E8a8OrCB9Hijrj4g'
-CONSUMER_SECRET = 'rOlgsksdt8RXvJSU4jFno1aealePVYd7kn744rgH8'
+from django.conf import settings
+from django.contrib.auth.models import User
+from models import *
 
 
+class TwitterBackend:
+    # Auth for Twitter Login
+    # Returns a user if one exists
+    # Creates on if it doesn't exist already
+    def authenticate(self, profile=None, access_token=None, access_token_secret=None):
+        try:
+            user = User.objects.get(username= "%s@twitter" % profile.id )
+            if user.twitter.access_token_secret == access_token_secret:
+                return user
+            else:
+                return None
+        except User.DoesNotExist:
+            user = User.objects.create_user('%s@twitter' % profile.id, '')
+            if " " in profile.name:
+                user.first_name = profile.name.split(' ')[0]
+                user.last_name = profile.name.split(' ')[1]
+            else:
+                user.first_name = profile.name
+            user.is_active = True
+            user.save()
+            # Save Twitter Data
+            twitter_cred = TwitterAuth(user=user)
+            twitter_cred.access_token = access_token
+            twitter_cred.access_token_secret = access_token_secret
+            twitter_cred.refresh_profile_data()
+            twitter_cred.save()
+            return user
 
-twitter = oauthtwitter.OAuthApi(CONSUMER_KEY, CONSUMER_SECRET)
-
-# Get the temporary credentials for our next few calls
-temp_credentials = twitter.getRequestToken()
-
-# User pastes this into their browser to bring back a pin number
-print(twitter.getAuthorizationURL(temp_credentials))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def get_user(self, user_id):
+        try:
+            username = "%s@twitter" % user_id
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            return None

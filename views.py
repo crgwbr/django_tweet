@@ -56,7 +56,9 @@ def authorize(request):
     else:
         return HttpResponse('Please Login first')
 
-def new_user(request):
+def login_with_twitter(request):
+    # implements Login with Twitter
+    # Does both Login and create new user (if nessasary)
     twitter_auth = oauthtwitter.OAuthApi(CONSUMER_KEY, CONSUMER_SECRET)
     if request.GET.has_key('oauth_token') or request.GET.has_key('oauth_verifier'):
         # Get temp_credentials from DB
@@ -67,32 +69,16 @@ def new_user(request):
         token = twitter_auth.getAccessToken(temp_credentials, oauth_verifier)
         access_token = token['oauth_token']
         access_token_secret = token['oauth_token_secret']
-        # Verify User Auth
+        # Verify User Auth with Twitter
         api = twitter.Api(consumer_key=CONSUMER_KEY,
                           consumer_secret=CONSUMER_SECRET,
                           access_token_key=access_token,
                           access_token_secret=access_token_secret)
         profile = api.VerifyCredentials()
-        # Create New User with data from twitter profile & random password
-        try:
-            new_user = User.objects.create_user('%s@twitter' % profile.id, '', access_token_secret)
-            if " " in profile.name:
-                new_user.first_name = profile.name.split(' ')[0]
-                new_user.last_name = profile.name.split(' ')[1]
-            else:
-                new_user.first_name = profile.name
-            new_user.is_active = True
-            new_user.save()
-            # Save Twitter Data
-            twitter_cred = TwitterAuth(user=new_user)
-            twitter_cred.access_token = access_token
-            twitter_cred.access_token_secret = access_token_secret
-            twitter_cred.refresh_profile_data()
-            twitter_cred.save()
-        except:
-            new_user = User.objects.get(username='%s@twitter' % profile.id)
         # Login User
-        user = authenticate(username='%s@twitter' % profile.id, password=access_token_secret)
+        user = authenticate(profile = profile,
+                            access_token = access_token,
+                            access_token_secret = access_token_secret)
         if user != None:
             login(request, user)
         else:
