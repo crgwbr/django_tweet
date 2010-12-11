@@ -80,8 +80,8 @@ class FacebookAuth(models.Model):
     def refresh_profile_data(self):
         # Refreshes Cached Profile data
         # Profile data is cached to prevent overuse of API
-        url = "https://graph.facebook.com/me?" + urllib.urlencode({'access_token':self.access_token})
-        profile = json.load(urllib.urlopen(url))
+        graph = self.api()
+        profile = graph.get_object('me')
         self.profile_data = pickle.dumps(profile)
         self.profile_refreshed = datetime.now()
         self.save()
