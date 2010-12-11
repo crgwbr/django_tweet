@@ -31,7 +31,7 @@ Right now these are the working functions.
 
 *  `/twitter/add_twitter` Send Users here to OAuth with Twitter.  They must be logged in with Django's Auth system
 *  `/twitter/twitter_login` Send anonymous users to create a new account / login via their Twitter account.
-*  `/twitter/twitter_post` Direct POST forms here with update="....." to post updates to twitter. If the user hasn't auth'd yet, they get sent to `/twitter/auth`
+*  `/twitter/twitter_post` Direct POST forms here with update="....." to post updates to twitter. If the user hasn't auth'd yet, they get sent to `/twitter/twitter_login`
 *  `/twitter/twitter_form` A very rough *testing only* update form. Shows some basic user info and enables posting updates
 *  `/twitter/add_facebook` Send Users here to OAuth with Facebook.  They must be logged in with Django's Auth system
 *  `/twitter/facebook_login` Send anonymous users to create a new account / login via their Facebook account.
