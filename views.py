@@ -41,8 +41,8 @@ def authorize_with_twitter(request):
             twitter_cred.access_token = access_token['oauth_token']
             twitter_cred.access_token_secret = access_token['oauth_token_secret']
             # Verify User Auth
-            api = twitter.Api(consumer_key=CONSUMER_KEY,
-                              consumer_secret=CONSUMER_SECRET,
+            api = twitter.Api(consumer_key=TWITTER_CONSUMER_KEY,
+                              consumer_secret=TWITTER_CONSUMER_SECRET,
                               access_token_key=twitter_cred.access_token,
                               access_token_secret=twitter_cred.access_token_secret)
             profile = api.VerifyCredentials()
@@ -51,7 +51,7 @@ def authorize_with_twitter(request):
             return HttpResponseRedirect(AUTH_REDIRECT)
         else:
             # Get the temporary credentials for our next few calls
-            temp_credentials = twitter_auth.getRequestToken(callback=CALLBACK_URL)
+            temp_credentials = twitter_auth.getRequestToken(callback=ADD_TWITTER_URL)
             # Save temp_credentials in DB
             try: twitter_cred = request.user.twitter
             except: twitter_cred = TwitterAuth(user=request.user)
@@ -61,11 +61,15 @@ def authorize_with_twitter(request):
             # Redirect User to Twitter
             return HttpResponseRedirect(twitter_auth.getAuthorizationURL(temp_credentials))
     elif (not request.user.is_staff and not ALLOW_NON_STAFF):
-        return HttpResponse("Non Staff isn't allowed to do this.")
+        # Non staff isn't allowed to do this
+        url = "?".join((AUTH_DENIED, 'message=Non-staff%20isn\'t%20allowed%20to%20do%20this.'))
+        return HttpResponseRedirect(url)
     elif (request.user.is_staff and not ALLOW_STAFF):
-        return HttpResponse("Staff isn't allowed to do this.")
+        # Staff isn't allowed to do this
+        url = "?".join((AUTH_DENIED, 'message=Staff%20isn\'t%20allowed%20to%20do%20this.'))
+        return HttpResponseRedirect(url)
     else:
-        return HttpResponseRedirect('/%s/register' % APP_URL_PREFIX)
+        return HttpResponseRedirect(TWITTER_LOGIN_URL)
 
 """
 ===========================================================================================================================================
@@ -98,12 +102,15 @@ def login_with_twitter(request):
         if user != None:
             login(request, user)
         else:
-            raise Exception("Auth Error: %s %s" % ('%s@twitter' % profile.id, access_token_secret))
+            url = "?".join((AUTH_DENIED, 'message=Unexpected%20Auth%20Error'))
+            return HttpResponseRedirect(url)
         # Redirect user
-        return HttpResponseRedirect(request.session.get('redirect', AUTH_REDIRECT))
+        url = request.session.get('redirect', AUTH_REDIRECT)
+        if request.session.has_key('redirect'): del request.session['redirect']
+        return HttpResponseRedirect(url)
     else:
         # Get the temporary credentials for our next few calls
-        temp_credentials = twitter_auth.getRequestToken(callback=REGISTER_URL)
+        temp_credentials = twitter_auth.getRequestToken(callback=TWITTER_LOGIN_URL)
         # Save temp_credentials
         request.session['request_token'] = temp_credentials['oauth_token']
         request.session['request_token_secret'] = temp_credentials['oauth_token_secret']
@@ -112,7 +119,7 @@ def login_with_twitter(request):
         if request.GET.has_key('redirect'):
             request.session['redirect'] = request.GET['redirect']
         # Redirect User to Twitter
-        return HttpResponseRedirect(twitter_auth.getAuthorizationURL(temp_credentials, url=AUTHENTICATE_URL))
+        return HttpResponseRedirect(twitter_auth.getAuthorizationURL(temp_credentials, url=TWITTER_AUTHENTICATE_URL))
 
 """
 ===========================================================================================================================================
@@ -128,11 +135,8 @@ def send_tweet(request):
             status = api.PostUpdate(request.POST['update'])
         else:
             # Log in user
-            return HttpResponseRedirect('/%s/register?redirect=%s' % (APP_URL_PREFIX, request.META.get('HTTP_REFERER', AUTH_REDIRECT)))
-    if request.META.has_key('HTTP_REFERER'):
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-    else:
-        return HttpResponseRedirect("/")
+            return HttpResponseRedirect('%s?redirect=%s' % (TWITTER_LOGIN_URL, request.META.get('HTTP_REFERER', AUTH_REDIRECT)))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', AUTH_REDIRECT))
 
 """
 ===========================================================================================================================================
@@ -181,13 +185,17 @@ def authorize_with_facebook(request):
             facebook_cred.save()
             return HttpResponseRedirect(AUTH_REDIRECT)
         else:
-            return HttpResponseRedirect(facebook.getAuthorizationURL('http://%s/%s/add_facebook' % (settings.TARGET_HOST, APP_URL_PREFIX)))
+            return HttpResponseRedirect(facebook.getAuthorizationURL(ADD_FACEBOOK_URL))
     elif (not request.user.is_staff and not ALLOW_NON_STAFF):
-        return HttpResponse("Non Staff isn't allowed to do this.")
+        # Non staff isn't allowed to do this
+        url = "?".join((AUTH_DENIED, 'message=Non-staff%20isn\'t%20allowed%20to%20do%20this.'))
+        return HttpResponseRedirect(url)
     elif (request.user.is_staff and not ALLOW_STAFF):
-        return HttpResponse("Staff isn't allowed to do this.")
+        # Staff isn't allowed to do this
+        url = "?".join((AUTH_DENIED, 'message=Staff%20isn\'t%20allowed%20to%20do%20this.'))
+        return HttpResponseRedirect(url)
     else:
-        return HttpResponseRedirect('/%s/facebook_login' % APP_URL_PREFIX)
+        return HttpResponseRedirect(FACEBOOK_LOGIN_URL)
 
 """
 ===========================================================================================================================================
@@ -198,7 +206,7 @@ def login_with_facebook(request):
     facebook = oauthfacebook.OAuthAPI(FACEBOOK_APP_ID, FACEBOOK_APP_SECRET)
     verification_code = request.GET.get("code", None)
     if verification_code:
-        access_token = facebook.getAccessToken(verification_code, 'http://%s/%s/facebook_login' % (settings.TARGET_HOST, APP_URL_PREFIX))
+        access_token = facebook.getAccessToken(verification_code, FACEBOOK_LOGIN_URL)
         profile = facebook.getProfile()
         # Login User
         user = authenticate(profile = profile,
@@ -207,11 +215,18 @@ def login_with_facebook(request):
         if user != None:
             login(request, user)
         else:
-            raise Exception("Auth Error: %s %s" % ('%s@twitter' % profile.id, access_token_secret))
+            url = "?".join((AUTH_DENIED, 'message=Unexpected%20Auth%20Error'))
+            return HttpResponseRedirect(url)
         # Redirect user
-        return HttpResponseRedirect(request.session.get('redirect', AUTH_REDIRECT))
+        url = request.session.get('redirect', AUTH_REDIRECT)
+        if request.session.has_key('redirect'): del request.session['redirect']
+        return HttpResponseRedirect(url)
     else:
-        return HttpResponseRedirect(facebook.getAuthorizationURL('http://%s/%s/facebook_login' % (settings.TARGET_HOST, APP_URL_PREFIX)))
+        # Set login redirect
+        if request.GET.has_key('redirect'):
+            request.session['redirect'] = request.GET['redirect']
+        # Redirect
+        return HttpResponseRedirect(facebook.getAuthorizationURL(FACEBOOK_LOGIN_URL))
 
 
 
