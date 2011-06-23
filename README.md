@@ -1,17 +1,18 @@
 #Installation Instructions
 1. Copy the django_tweet directory into you Django project
+
 2. Edit `settings.py` to include:
 
-    TARGET_HOST = 'localhost:8000'    # Replace localhost:8000 with your domain
-    INSTALLED_APPS = (
-        ...                           # Other Installed Apps before or after
-        'devproject.django_tweet',    # Replace devproject with your project name
-        ...                           
-    )
-    AUTHENTICATION_BACKENDS = (
-        'devproject.django_tweet.auth.TwitterBackend',
-	'devproject.django_tweet.auth.FacebookBackend',
-    )		
+        TARGET_HOST = 'localhost:8000'    # Replace localhost:8000 with your domain
+        INSTALLED_APPS = (
+            ...                           # Other Installed Apps before or after
+            'devproject.django_tweet',    # Replace devproject with your project name
+            ...                           
+        )
+        AUTHENTICATION_BACKENDS = (
+            'devproject.django_tweet.auth.TwitterBackend',
+	    'devproject.django_tweet.auth.FacebookBackend',
+        )		
 
 3. Add this to your `urls.py`
 
